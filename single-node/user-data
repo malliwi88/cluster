@@ -3,12 +3,11 @@
 ---
 coreos:
   update:
-    group: stable
     reboot-strategy: best-effort
   etcd:
     addr: $public_ipv4:4001
     peer-addr: $public_ipv4:7001
-    discovery: https://discovery.etcd.io/6674a4898001d2ccda10166c0cf1c989
+    discovery: https://discovery.etcd.io/a9c03636528c1462a3de5f3a8b4f124d
   fleet:
     public-ip: $public_ipv4
   flannel:
