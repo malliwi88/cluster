@@ -1,0 +1,50 @@
+#cloud-config
+
+---
+coreos:
+  update:
+    group: stable
+    reboot-strategy: best-effort
+  etcd:
+    addr: $public_ipv4:4001
+    peer-addr: $public_ipv4:7001
+    discovery: https://discovery.etcd.io/6674a4898001d2ccda10166c0cf1c989
+  fleet:
+    public-ip: $public_ipv4
+  flannel:
+    interface: $public_ipv4
+  units:
+  - name: etcd.service
+    command: start
+  - name: fleet.service
+    command: start
+  - name: docker-tcp.socket
+    command: start
+    enable: true
+    content: |
+      [Unit]
+      Description=Docker Socket for the API
+
+      [Socket]
+      ListenStream=2375
+      Service=docker.service
+      BindIPv6Only=both
+
+      [Install]
+      WantedBy=sockets.target
+users:
+- name: core
+  groups:
+  - sudo
+  - docker
+write_files:
+- path: /root/.bashrc
+  permissions: 600
+  owner: root:root
+  encoding: b64
+  content: IyBDSEVDSyBGT1IgSU5URVJBQ1RJVkUgU0hFTExTCmlmIFtbICQtICE9ICppKiBdXSA7IHRoZW4KICAjIFNoZWxsIGlzIG5vbi1pbnRlcmFjdGl2ZS4gIEJlIGRvbmUgbm93IQogIHJldHVybgpmaQoKIyBDVVNUT00gQ09NTUFORFMgQUxJQVNFUwphbGlhcyAuLj0iY2QgLi4iCmFsaWFzIGxzPSJscyAtLWNvbG9yIgphbGlhcyBybT0ncm0gLWknCmFsaWFzIGNwPSdjcCAtaScKYWxpYXMgbXY9J212IC1pJwphbGlhcyBwZz0icHMgYXV4IHwgZ3JlcCIKYWxpYXMgc3NoPSJzc2ggLXYiCmFsaWFzIHNjcD0ic2NwIC12IgphbGlhcyBsZXNzPSdsZXNzIC1SJwphbGlhcyBwaW5nPSJwaW5nIC1jIDQiCmFsaWFzIHRyZWU9InRyZWUgLUMiCmFsaWFzIHRhcmM9J3RhciBjdmYnCmFsaWFzIHRhcmN6PSd0YXIgY3p2ZicKYWxpYXMgdGFyeD0ndGFyIHh2ZicKYWxpYXMgdGFyeHo9J3RhciB4dnpmJwoKIyBISVNUT1JZIFNFVFRJTkdTCmV4cG9ydCBISVNUVElNRUZPUk1BVD0nJUYgJVQgJwpleHBvcnQgSElTVENPTlRST0w9ZXJhc2VkdXBzCmV4cG9ydCBISVNUQ09OVFJPTD1pZ25vcmVkdXBzCmV4cG9ydCBISVNUQ09OVFJPTD1pZ25vcmVzcGFjZQpleHBvcnQgSElTVElHTk9SRT0icHdkOmhpc3Rvcnk6bHM6bHMgLWxoOmNsZWFyIgoKIyBHUkVQCmV4cG9ydCBHUkVQX09QVElPTlM9Ii0tY29sb3I9YXV0byIKZXhwb3J0IEdSRVBfQ09MT1I9IjE7MzIiCgojIExPQUQgQkFTSCBDT01QTEVUSU9OIERFRklOSVRJT05TCmlmIFsgLWYgL2V0Yy9iYXNoX2NvbXBsZXRpb24gXTsgdGhlbgogIC4gL2V0Yy9iYXNoX2NvbXBsZXRpb24KZmkKCiMgTkVXIFBST01QVAppZigoICRVSUQgPT0gMCApKTsgdGhlbgogIGV4cG9ydCBQUzE9IlxlWzE7MzFtXHVcZVswbUBcSCBcdyA+OiAiCmVsc2UKICBleHBvcnQgUFMxPSJcZVsxOzMybVx1XGVbMG1AXEggXHcgPjogIgpmaQoK
+- path: /home/core/.bashrc
+  permissions: 600
+  owner: core:core
+  encoding: b64
+  content: IyBDSEVDSyBGT1IgSU5URVJBQ1RJVkUgU0hFTExTCmlmIFtbICQtICE9ICppKiBdXSA7IHRoZW4KICAjIFNoZWxsIGlzIG5vbi1pbnRlcmFjdGl2ZS4gIEJlIGRvbmUgbm93IQogIHJldHVybgpmaQoKIyBDVVNUT00gQ09NTUFORFMgQUxJQVNFUwphbGlhcyAuLj0iY2QgLi4iCmFsaWFzIGxzPSJscyAtLWNvbG9yIgphbGlhcyBybT0ncm0gLWknCmFsaWFzIGNwPSdjcCAtaScKYWxpYXMgbXY9J212IC1pJwphbGlhcyBwZz0icHMgYXV4IHwgZ3JlcCIKYWxpYXMgc3NoPSJzc2ggLXYiCmFsaWFzIHNjcD0ic2NwIC12IgphbGlhcyBsZXNzPSdsZXNzIC1SJwphbGlhcyBwaW5nPSJwaW5nIC1jIDQiCmFsaWFzIHJvb3Q9InN1ZG8gLXMiCmFsaWFzIHRyZWU9InRyZWUgLUMiCmFsaWFzIHRhcmM9J3RhciBjdmYnCmFsaWFzIHRhcmN6PSd0YXIgY3p2ZicKYWxpYXMgdGFyeD0ndGFyIHh2ZicKYWxpYXMgdGFyeHo9J3RhciB4dnpmJwoKIyBISVNUT1JZIFNFVFRJTkdTCmV4cG9ydCBISVNUVElNRUZPUk1BVD0nJUYgJVQgJwpleHBvcnQgSElTVENPTlRST0w9ZXJhc2VkdXBzCmV4cG9ydCBISVNUQ09OVFJPTD1pZ25vcmVkdXBzCmV4cG9ydCBISVNUQ09OVFJPTD1pZ25vcmVzcGFjZQpleHBvcnQgSElTVElHTk9SRT0icHdkOmhpc3Rvcnk6bHM6bHMgLWxoOmNsZWFyIgoKIyBHUkVQCmV4cG9ydCBHUkVQX09QVElPTlM9Ii0tY29sb3I9YXV0byIKZXhwb3J0IEdSRVBfQ09MT1I9IjE7MzIiCgojIExPQUQgQkFTSCBDT01QTEVUSU9OIERFRklOSVRJT05TCmlmIFsgLWYgL2V0Yy9iYXNoX2NvbXBsZXRpb24gXTsgdGhlbgogIC4gL2V0Yy9iYXNoX2NvbXBsZXRpb24KZmkKCiMgTkVXIFBST01QVAppZigoICRVSUQgPT0gMCApKTsgdGhlbgogIGV4cG9ydCBQUzE9IlxlWzE7MzFtXHVcZVswbUBcSCBcdyA+OiAiCmVsc2UKICBleHBvcnQgUFMxPSJcZVsxOzMybVx1XGVbMG1AXEggXHcgPjogIgpmaQo=
