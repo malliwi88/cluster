@@ -1,0 +1,83 @@
+# Default definition if HOME isn't defined.
+HOME                        = .
+RANDFILE                    = $ENV::HOME/.rnd
+
+# Extra OBJECT IDENTIFIER info:
+oid_section                 = new_oids
+
+[ new_oids ]
+streetAddress               = 2.5.4.9
+description                 = 2.5.4.13
+businessCategory            = 2.5.4.15
+postalCode                  = 2.5.4.17
+POBox                       = 2.5.4.18
+telephoneNumber             = 2.5.4.20
+
+[ req ]
+default_bits                = 2048
+default_keyfile             = privkey.pem
+default_md                  = sha1
+string_mask                 = nombstr
+distinguished_name          = req_distinguished_name
+
+[ req_distinguished_name ]
+commonName                  = Common Name (e.g. email)
+description                 = Description (main purpose for the certificate)
+organizationName            = Organization Name (eg, company)
+organizationalUnitName      = Organizational Unit Name (eg, section)
+emailAddress                = Email Address
+businessCategory            = Business Category (optional)
+businessCategory_default    = Open Government
+streetAddress               = Street Address (optional)
+localityName                = Locality Name (eg, city)
+stateOrProvinceName         = State or Province Name (full name)
+countryName                 = Country Name (2 letter code)
+countryName_default         = MX
+postalCode                  = Postal Code (optional)
+POBox                       = POBox (optional)
+telephoneNumber             = Telephone (optional)
+
+# Extensions for developer member ( code sign )
+[ developer ]
+basicConstraints            = critical,CA:FALSE
+subjectKeyIdentifier        = hash
+keyUsage                    = nonRepudiation, digitalSignature
+extendedKeyUsage            = clientAuth, codeSigning, emailProtection
+
+# Extensions for identity member ( email )
+[ email ]
+basicConstraints            = critical,CA:FALSE
+subjectKeyIdentifier        = hash
+keyUsage                    = nonRepudiation, digitalSignature
+extendedKeyUsage            = clientAuth, emailProtection
+
+# Extensions for a service client
+[ client ]
+basicConstraints            = critical,CA:FALSE
+subjectKeyIdentifier        = hash
+keyUsage                    = nonRepudiation, digitalSignature
+extendedKeyUsage            = clientAuth
+
+# Extensions for a intermediate CA
+[ ica ]
+basicConstraints            = critical,CA:TRUE
+keyUsage                    = critical,cRLSign, keyCertSign
+subjectKeyIdentifier        = hash
+nsCertType                  = objCA, sslCA, emailCA
+#authorityKeyIdentifier     = keyid:always,issuer:always
+#subjectAltName             = email:copy
+#issuerAltName              = issuer:copy
+
+# Extensions for a mongodb client certificate
+[ mongoClient ]
+basicConstraints            = critical,CA:FALSE
+subjectKeyIdentifier        = hash
+keyUsage                    = digitalSignature
+extendedKeyUsage            = clientAuth
+
+# Extensions for a mongodb server certificate
+[ mongoServer ]
+basicConstraints            = critical,CA:FALSE
+subjectKeyIdentifier        = hash
+keyUsage                    = digitalSignature
+extendedKeyUsage            = serverAuth

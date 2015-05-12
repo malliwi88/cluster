@@ -1,0 +1,62 @@
+# Default definition if HOME isn't defined.
+HOME                        = .
+RANDFILE                    = $ENV::HOME/.rnd
+
+# Extra OBJECT IDENTIFIER info:
+oid_section                 = new_oids
+
+[ new_oids ]
+streetAddress               = 2.5.4.9
+description                 = 2.5.4.13
+businessCategory            = 2.5.4.15
+postalCode                  = 2.5.4.17
+POBox                       = 2.5.4.18
+telephoneNumber             = 2.5.4.20
+
+[ req ]
+default_bits                = 4096
+default_keyfile             = privkey.pem
+default_md                  = sha1
+preserve                    = yes
+string_mask                 = nombstr
+distinguished_name          = req_distinguished_name
+x509_extensions             = ca_ext
+
+[ req_distinguished_name ]
+commonName                  = Common Name (e.g. server FQDN or YOUR name)
+commonName_default          = México Abierto Root CA
+commonName_max              = 64
+organizationName            = Organization Name (eg, company)
+organizationName_default    = México Abierto
+organizationalUnitName      = Organizational Unit Name (eg, section)
+emailAddress                = Email Address
+emailAddress_default        = mexico.abierto@datos.gob.mx
+emailAddress_max            = 64
+businessCategory            = Business Category (optional)
+businessCategory_default    = Open Government
+streetAddress               = Street Address (optional)
+#streetAddress_default       = 
+localityName                = Locality Name (eg, city)
+#localityName_default        = 
+stateOrProvinceName         = State or Province Name (full name)
+stateOrProvinceName_default = DF
+countryName                 = Country Name (2 letter code)
+countryName_default         = MX
+countryName_min             = 2
+countryName_max             = 2
+postalCode                  = Postal Code (optional)
+#postalCode_default          = 94470
+POBox                       = POBox (optional)
+#POBox_default               = 115
+telephoneNumber             = Telephone (optional)
+#telephoneNumber_default     = +52 xxxxxx
+description                 = Description
+
+[ ca_ext ]
+basicConstraints            = critical,CA:TRUE
+keyUsage                    = critical,cRLSign, keyCertSign
+subjectKeyIdentifier        = hash
+authorityKeyIdentifier      = keyid:always,issuer:always
+nsCertType                  = objCA, sslCA, emailCA
+#subjectAltName             = email:copy
+#issuerAltName              = issuer:copy
