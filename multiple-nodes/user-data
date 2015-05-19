@@ -7,7 +7,7 @@ coreos:
   etcd:
     addr: $public_ipv4:4001
     peer-addr: $public_ipv4:7001
-    discovery: https://discovery.etcd.io/9db81d0eace4176d3c99ed60052da066
+    discovery: https://discovery.etcd.io/51d3c6746e53df8f95424b3cf4c55037
   fleet:
     public-ip: $public_ipv4
   flannel:
@@ -31,6 +31,16 @@ coreos:
 
       [Install]
       WantedBy=sockets.target
+  - name: set-timezone.service
+    command: start
+    content: |
+      [Unit]
+      Description=Set Timezone
+
+      [Service]
+      ExecStart=/usr/bin/timedatectl set-timezone UTC
+      RemainAfterExit=yes
+      Type=oneshot
 users:
 - name: core
   groups:
@@ -40,10 +50,126 @@ write_files:
 - path: /root/.bashrc
   permissions: 600
   owner: root:root
-  encoding: b64
-  content: IyBDSEVDSyBGT1IgSU5URVJBQ1RJVkUgU0hFTExTCmlmIFtbICQtICE9ICppKiBdXSA7IHRoZW4KICAjIFNoZWxsIGlzIG5vbi1pbnRlcmFjdGl2ZS4gIEJlIGRvbmUgbm93IQogIHJldHVybgpmaQoKIyBDVVNUT00gQ09NTUFORFMgQUxJQVNFUwphbGlhcyAuLj0iY2QgLi4iCmFsaWFzIGxzPSJscyAtLWNvbG9yIgphbGlhcyBybT0ncm0gLWknCmFsaWFzIGNwPSdjcCAtaScKYWxpYXMgbXY9J212IC1pJwphbGlhcyBwZz0icHMgYXV4IHwgZ3JlcCIKYWxpYXMgc3NoPSJzc2ggLXYiCmFsaWFzIHNjcD0ic2NwIC12IgphbGlhcyBsZXNzPSdsZXNzIC1SJwphbGlhcyBwaW5nPSJwaW5nIC1jIDQiCmFsaWFzIHRyZWU9InRyZWUgLUMiCmFsaWFzIHRhcmM9J3RhciBjdmYnCmFsaWFzIHRhcmN6PSd0YXIgY3p2ZicKYWxpYXMgdGFyeD0ndGFyIHh2ZicKYWxpYXMgdGFyeHo9J3RhciB4dnpmJwoKIyBISVNUT1JZIFNFVFRJTkdTCmV4cG9ydCBISVNUVElNRUZPUk1BVD0nJUYgJVQgJwpleHBvcnQgSElTVENPTlRST0w9ZXJhc2VkdXBzCmV4cG9ydCBISVNUQ09OVFJPTD1pZ25vcmVkdXBzCmV4cG9ydCBISVNUQ09OVFJPTD1pZ25vcmVzcGFjZQpleHBvcnQgSElTVElHTk9SRT0icHdkOmhpc3Rvcnk6bHM6bHMgLWxoOmNsZWFyIgoKIyBHUkVQCmV4cG9ydCBHUkVQX09QVElPTlM9Ii0tY29sb3I9YXV0byIKZXhwb3J0IEdSRVBfQ09MT1I9IjE7MzIiCgojIExPQUQgQkFTSCBDT01QTEVUSU9OIERFRklOSVRJT05TCmlmIFsgLWYgL2V0Yy9iYXNoX2NvbXBsZXRpb24gXTsgdGhlbgogIC4gL2V0Yy9iYXNoX2NvbXBsZXRpb24KZmkKCiMgTkVXIFBST01QVAppZigoICRVSUQgPT0gMCApKTsgdGhlbgogIGV4cG9ydCBQUzE9IlxlWzE7MzFtXHVcZVswbUBcSCBcdyA+OiAiCmVsc2UKICBleHBvcnQgUFMxPSJcZVsxOzMybVx1XGVbMG1AXEggXHcgPjogIgpmaQoK
+  content: |
+    # CHECK FOR INTERACTIVE SHELLS
+    if [[ $- != *i* ]] ; then
+      # Shell is non-interactive.  Be done now!
+      return
+    fi
+
+    # CUSTOM COMMANDS ALIASES
+    alias ..="cd .."
+    alias ls="ls --color"
+    alias rm='rm -i'
+    alias cp='cp -i'
+    alias mv='mv -i'
+    alias pg="ps aux | grep"
+    alias ssh="ssh -v"
+    alias scp="scp -v"
+    alias less='less -R'
+    alias ping="ping -c 4"
+    alias tree="tree -C"
+    alias tarc='tar cvf'
+    alias tarcz='tar czvf'
+    alias tarx='tar xvf'
+    alias tarxz='tar xvzf'
+
+    # HISTORY SETTINGS
+    export HISTTIMEFORMAT='%F %T '
+    export HISTCONTROL=erasedups
+    export HISTCONTROL=ignoredups
+    export HISTCONTROL=ignorespace
+    export HISTIGNORE="pwd:history:ls:ls -lh:clear"
+
+    # GREP
+    export GREP_OPTIONS="--color=auto"
+    export GREP_COLOR="1;32"
+
+    # LOAD BASH COMPLETION DEFINITIONS
+    if [ -f /etc/bash_completion ]; then
+      . /etc/bash_completion
+    fi
+
+    # NEW PROMPT
+    if(( $UID == 0 )); then
+      export PS1="\e[1;31m\u\e[0m@\H \w >: "
+    else
+      export PS1="\e[1;32m\u\e[0m@\H \w >: "
+    fi
 - path: /home/core/.bashrc
   permissions: 600
   owner: core:core
-  encoding: b64
-  content: IyBDSEVDSyBGT1IgSU5URVJBQ1RJVkUgU0hFTExTCmlmIFtbICQtICE9ICppKiBdXSA7IHRoZW4KICAjIFNoZWxsIGlzIG5vbi1pbnRlcmFjdGl2ZS4gIEJlIGRvbmUgbm93IQogIHJldHVybgpmaQoKIyBDVVNUT00gQ09NTUFORFMgQUxJQVNFUwphbGlhcyAuLj0iY2QgLi4iCmFsaWFzIGxzPSJscyAtLWNvbG9yIgphbGlhcyBybT0ncm0gLWknCmFsaWFzIGNwPSdjcCAtaScKYWxpYXMgbXY9J212IC1pJwphbGlhcyBwZz0icHMgYXV4IHwgZ3JlcCIKYWxpYXMgc3NoPSJzc2ggLXYiCmFsaWFzIHNjcD0ic2NwIC12IgphbGlhcyBsZXNzPSdsZXNzIC1SJwphbGlhcyBwaW5nPSJwaW5nIC1jIDQiCmFsaWFzIHJvb3Q9InN1ZG8gLXMiCmFsaWFzIHRyZWU9InRyZWUgLUMiCmFsaWFzIHRhcmM9J3RhciBjdmYnCmFsaWFzIHRhcmN6PSd0YXIgY3p2ZicKYWxpYXMgdGFyeD0ndGFyIHh2ZicKYWxpYXMgdGFyeHo9J3RhciB4dnpmJwoKIyBISVNUT1JZIFNFVFRJTkdTCmV4cG9ydCBISVNUVElNRUZPUk1BVD0nJUYgJVQgJwpleHBvcnQgSElTVENPTlRST0w9ZXJhc2VkdXBzCmV4cG9ydCBISVNUQ09OVFJPTD1pZ25vcmVkdXBzCmV4cG9ydCBISVNUQ09OVFJPTD1pZ25vcmVzcGFjZQpleHBvcnQgSElTVElHTk9SRT0icHdkOmhpc3Rvcnk6bHM6bHMgLWxoOmNsZWFyIgoKIyBHUkVQCmV4cG9ydCBHUkVQX09QVElPTlM9Ii0tY29sb3I9YXV0byIKZXhwb3J0IEdSRVBfQ09MT1I9IjE7MzIiCgojIExPQUQgQkFTSCBDT01QTEVUSU9OIERFRklOSVRJT05TCmlmIFsgLWYgL2V0Yy9iYXNoX2NvbXBsZXRpb24gXTsgdGhlbgogIC4gL2V0Yy9iYXNoX2NvbXBsZXRpb24KZmkKCiMgTkVXIFBST01QVAppZigoICRVSUQgPT0gMCApKTsgdGhlbgogIGV4cG9ydCBQUzE9IlxlWzE7MzFtXHVcZVswbUBcSCBcdyA+OiAiCmVsc2UKICBleHBvcnQgUFMxPSJcZVsxOzMybVx1XGVbMG1AXEggXHcgPjogIgpmaQo=
+  content: |
+    # CHECK FOR INTERACTIVE SHELLS
+    if [[ $- != *i* ]] ; then
+      # Shell is non-interactive.  Be done now!
+      return
+    fi
+
+    # CUSTOM COMMANDS ALIASES
+    alias ..="cd .."
+    alias ls="ls --color"
+    alias rm='rm -i'
+    alias cp='cp -i'
+    alias mv='mv -i'
+    alias pg="ps aux | grep"
+    alias ssh="ssh -v"
+    alias scp="scp -v"
+    alias less='less -R'
+    alias ping="ping -c 4"
+    alias root="sudo -s"
+    alias tree="tree -C"
+    alias tarc='tar cvf'
+    alias tarcz='tar czvf'
+    alias tarx='tar xvf'
+    alias tarxz='tar xvzf'
+
+    # HISTORY SETTINGS
+    export HISTTIMEFORMAT='%F %T '
+    export HISTCONTROL=erasedups
+    export HISTCONTROL=ignoredups
+    export HISTCONTROL=ignorespace
+    export HISTIGNORE="pwd:history:ls:ls -lh:clear"
+
+    # GREP
+    export GREP_OPTIONS="--color=auto"
+    export GREP_COLOR="1;32"
+
+    # LOAD BASH COMPLETION DEFINITIONS
+    if [ -f /etc/bash_completion ]; then
+      . /etc/bash_completion
+    fi
+
+    # NEW PROMPT
+    if(( $UID == 0 )); then
+      export PS1="\e[1;31m\u\e[0m@\H \w >: "
+    else
+      export PS1="\e[1;32m\u\e[0m@\H \w >: "
+    fi
+- path: /etc/ntp.conf
+  permissions: 644
+  owner: root:root
+  content: |
+    # Common pool
+    server 0.coreos.pool.ntp.org
+    server 1.coreos.pool.ntp.org
+    server 2.coreos.pool.ntp.org
+    server 3.coreos.pool.ntp.org
+
+    # Allow only time queries, at a limited rate.
+    # Allow all local queries (IPv4, IPv6)
+    restrict default nomodify nopeer noquery limited kod
+    restrict 127.0.0.1
+    restrict [::1]
+- path: /etc/ssh/sshd_config
+  permissions: 600
+  owner: root:root
+  content: |-
+    # Use most defaults for sshd configuration.
+    UsePrivilegeSeparation sandbox
+    Subsystem sftp internal-sftp
+
+    PermitRootLogin no
+    AllowUsers core
+    PasswordAuthentication no
+    ChallengeResponseAuthentication no
