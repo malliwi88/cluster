@@ -7,12 +7,19 @@ coreos:
   etcd:
     addr: $public_ipv4:4001
     peer-addr: $public_ipv4:7001
-    discovery: https://discovery.etcd.io/51d3c6746e53df8f95424b3cf4c55037
+    discovery: https://discovery.etcd.io/893a2878659893e437c4f9bb0e13b834
   fleet:
     public-ip: $public_ipv4
   flannel:
     interface: $public_ipv4
   units:
+  - name: flanneld.service
+    command: start
+    drop-ins:
+    - name: 50-network-config.conf
+      content: |
+        [Service]
+        ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
   - name: etcd.service
     command: start
   - name: fleet.service
@@ -41,6 +48,24 @@ coreos:
       ExecStart=/usr/bin/timedatectl set-timezone UTC
       RemainAfterExit=yes
       Type=oneshot
+  - name: haveged.service
+    command: start
+    content: |
+      [Unit]
+      Description=Haveged daemon for improved entropy
+      Requires=flanneld.service
+      After=flanneld.service
+
+      [Service]
+      EnvironmentFile=/etc/environment
+      Restart=always
+      TimeoutStartSec=0
+      KillMode=none
+      ExecStartPre=-/usr/bin/docker kill haveged
+      ExecStartPre=-/usr/bin/docker rm haveged
+      ExecStartPre=-/usr/bin/docker pull mxabierto/haveged
+      ExecStart=/usr/bin/docker run --privileged --name=haveged mxabierto/haveged
+      ExecStop=/usr/bin/docker stop haveged
 users:
 - name: core
   groups:
@@ -96,6 +121,11 @@ write_files:
     else
       export PS1="\e[1;32m\u\e[0m@\H \w >: "
     fi
+
+    # FUNCTIONS
+    enter-container() {
+      nsenter -t $(docker inspect --format {{.State.Pid}} $1) -m -u -i -n -p /bin/sh
+    }
 - path: /home/core/.bashrc
   permissions: 600
   owner: core:core
@@ -146,6 +176,11 @@ write_files:
     else
       export PS1="\e[1;32m\u\e[0m@\H \w >: "
     fi
+
+    # FUNCTIONS
+    enter-container() {
+      sudo nsenter -t $(docker inspect --format {{.State.Pid}} $1) -m -u -i -n -p /bin/sh
+    }
 - path: /etc/ntp.conf
   permissions: 644
   owner: root:root
