@@ -1,0 +1,22 @@
+[Unit]
+Description=Kubernetes Proxy
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+Requires=etcd.service
+Requires=docker.service
+After=etcd.service
+After=docker.service
+
+[Service]
+Restart=always
+RestartSec=10
+
+# Download and install binary file
+ExecStartPre=-/usr/bin/mkdir -p /opt/bin
+ExecStartPre=/usr/bin/wget -N -P /opt/bin https://s3.amazonaws.com/org.mxabierto/kubernetes/kube-proxy
+ExecStartPre=/usr/bin/chmod +x /opt/bin/kube-proxy
+ExecStart=/opt/bin/kube-proxy \
+  --master=http://127.0.0.1:8080 \
+  --logtostderr=true
+
+[Install]
+WantedBy=multi-user.target
