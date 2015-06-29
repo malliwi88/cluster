@@ -7,12 +7,14 @@ After=etcd.service
 After=docker.service
 
 [Service]
-Restart=always
-RestartSec=10
+EnvironmentFile=/etc/environment
+TimeoutStartSec=0
+Restart=on-failure
+RestartSec=5
 
 # Download and install binary file
 ExecStartPre=-/usr/bin/mkdir -p /opt/bin
-ExecStartPre=/usr/bin/wget -N -P /opt/bin https://s3.amazonaws.com/org.mxabierto/kubernetes/kube-apiserver
+ExecStartPre=/usr/bin/wget -N -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/v0.19.1/bin/linux/amd64/kube-apiserver
 ExecStartPre=/usr/bin/chmod +x /opt/bin/kube-apiserver
 
 # portal_net should match flannel configuration

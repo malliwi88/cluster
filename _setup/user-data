@@ -7,7 +7,7 @@ coreos:
   etcd:
     addr: $public_ipv4:4001
     peer-addr: $public_ipv4:7001
-    discovery: https://discovery.etcd.io/4380bbbc798e450eaa61e7e64c9133b6
+    discovery: https://discovery.etcd.io/d1ecbf6cb8d4253d8da07ae77b7410f5
   fleet:
     public-ip: $public_ipv4
   flannel:
@@ -48,24 +48,6 @@ coreos:
       ExecStart=/usr/bin/timedatectl set-timezone UTC
       RemainAfterExit=yes
       Type=oneshot
-  - name: haveged.service
-    command: start
-    content: |
-      [Unit]
-      Description=Haveged daemon for improved entropy
-      Requires=flanneld.service
-      After=flanneld.service
-
-      [Service]
-      EnvironmentFile=/etc/environment
-      Restart=always
-      TimeoutStartSec=0
-      KillMode=none
-      ExecStartPre=-/usr/bin/docker kill haveged
-      ExecStartPre=-/usr/bin/docker rm haveged
-      ExecStartPre=-/usr/bin/docker pull mxabierto/haveged
-      ExecStart=/usr/bin/docker run --privileged --name=haveged mxabierto/haveged
-      ExecStop=/usr/bin/docker stop haveged
 users:
 - name: core
   groups:
