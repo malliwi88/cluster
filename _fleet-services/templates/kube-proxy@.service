@@ -21,3 +21,6 @@ ExecStart=/opt/bin/kube-proxy \
 
 [Install]
 WantedBy=multi-user.target
+
+[X-Fleet]
+Global=true

@@ -27,3 +27,6 @@ ExecStart=/opt/bin/kubelet \
 
 [Install]
 WantedBy=multi-user.target
+
+[X-Fleet]
+Global=true
