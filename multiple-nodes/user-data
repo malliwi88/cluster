@@ -1,0 +1,192 @@
+#cloud-config
+
+---
+coreos:
+  update:
+    reboot-strategy: best-effort
+  etcd:
+    addr: $public_ipv4:4001
+    peer-addr: $public_ipv4:7001
+    discovery: https://discovery.etcd.io/ae52400e4568fab77e877d2d22c12a2f
+  fleet:
+    public-ip: $public_ipv4
+  flannel:
+    interface: $public_ipv4
+  units:
+  - name: flanneld.service
+    command: start
+    drop-ins:
+    - name: 50-network-config.conf
+      content: |
+        [Service]
+        ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
+  - name: etcd.service
+    command: start
+  - name: fleet.service
+    command: start
+  - name: docker-tcp.socket
+    command: start
+    enable: true
+    content: |
+      [Unit]
+      Description=Docker Socket for the API
+
+      [Socket]
+      ListenStream=2375
+      Service=docker.service
+      BindIPv6Only=both
+
+      [Install]
+      WantedBy=sockets.target
+  - name: set-timezone.service
+    command: start
+    content: |
+      [Unit]
+      Description=Set Timezone
+
+      [Service]
+      ExecStart=/usr/bin/timedatectl set-timezone UTC
+      RemainAfterExit=yes
+      Type=oneshot
+users:
+- name: core
+  groups:
+  - sudo
+  - docker
+write_files:
+- path: /root/.bashrc
+  permissions: 600
+  owner: root:root
+  content: |
+    # CHECK FOR INTERACTIVE SHELLS
+    if [[ $- != *i* ]] ; then
+      # Shell is non-interactive.  Be done now!
+      return
+    fi
+
+    # CUSTOM COMMANDS ALIASES
+    alias ..="cd .."
+    alias ls="ls --color"
+    alias rm='rm -i'
+    alias cp='cp -i'
+    alias mv='mv -i'
+    alias pg="ps aux | grep"
+    alias ssh="ssh -v"
+    alias scp="scp -v"
+    alias less='less -R'
+    alias ping="ping -c 4"
+    alias tree="tree -C"
+    alias tarc='tar cvf'
+    alias tarcz='tar czvf'
+    alias tarx='tar xvf'
+    alias tarxz='tar xvzf'
+
+    # HISTORY SETTINGS
+    export HISTTIMEFORMAT='%F %T '
+    export HISTCONTROL=erasedups
+    export HISTCONTROL=ignoredups
+    export HISTCONTROL=ignorespace
+    export HISTIGNORE="pwd:history:ls:ls -lh:clear"
+
+    # GREP
+    export GREP_OPTIONS="--color=auto"
+    export GREP_COLOR="1;32"
+
+    # LOAD BASH COMPLETION DEFINITIONS
+    if [ -f /etc/bash_completion ]; then
+      . /etc/bash_completion
+    fi
+
+    # NEW PROMPT
+    if(( $UID == 0 )); then
+      export PS1="\e[1;31m\u\e[0m@\H \w >: "
+    else
+      export PS1="\e[1;32m\u\e[0m@\H \w >: "
+    fi
+
+    # FUNCTIONS
+    enter-container() {
+      nsenter -t $(docker inspect --format {{.State.Pid}} $1) -m -u -i -n -p /bin/sh
+    }
+- path: /home/core/.bashrc
+  permissions: 600
+  owner: core:core
+  content: |
+    # CHECK FOR INTERACTIVE SHELLS
+    if [[ $- != *i* ]] ; then
+      # Shell is non-interactive.  Be done now!
+      return
+    fi
+
+    # CUSTOM COMMANDS ALIASES
+    alias ..="cd .."
+    alias ls="ls --color"
+    alias rm='rm -i'
+    alias cp='cp -i'
+    alias mv='mv -i'
+    alias pg="ps aux | grep"
+    alias ssh="ssh -v"
+    alias scp="scp -v"
+    alias less='less -R'
+    alias ping="ping -c 4"
+    alias root="sudo -s"
+    alias tree="tree -C"
+    alias tarc='tar cvf'
+    alias tarcz='tar czvf'
+    alias tarx='tar xvf'
+    alias tarxz='tar xvzf'
+
+    # HISTORY SETTINGS
+    export HISTTIMEFORMAT='%F %T '
+    export HISTCONTROL=erasedups
+    export HISTCONTROL=ignoredups
+    export HISTCONTROL=ignorespace
+    export HISTIGNORE="pwd:history:ls:ls -lh:clear"
+
+    # GREP
+    export GREP_OPTIONS="--color=auto"
+    export GREP_COLOR="1;32"
+
+    # LOAD BASH COMPLETION DEFINITIONS
+    if [ -f /etc/bash_completion ]; then
+      . /etc/bash_completion
+    fi
+
+    # NEW PROMPT
+    if(( $UID == 0 )); then
+      export PS1="\e[1;31m\u\e[0m@\H \w >: "
+    else
+      export PS1="\e[1;32m\u\e[0m@\H \w >: "
+    fi
+
+    # FUNCTIONS
+    enter-container() {
+      sudo nsenter -t $(docker inspect --format {{.State.Pid}} $1) -m -u -i -n -p /bin/sh
+    }
+- path: /etc/ntp.conf
+  permissions: 644
+  owner: root:root
+  content: |
+    # Common pool
+    server 0.coreos.pool.ntp.org
+    server 1.coreos.pool.ntp.org
+    server 2.coreos.pool.ntp.org
+    server 3.coreos.pool.ntp.org
+
+    # Allow only time queries, at a limited rate.
+    # Allow all local queries (IPv4, IPv6)
+    restrict default nomodify nopeer noquery limited kod
+    restrict 127.0.0.1
+    restrict [::1]
+- path: /etc/ssh/sshd_config
+  permissions: 600
+  owner: root:root
+  content: |-
+    # Use most defaults for sshd configuration.
+    UsePrivilegeSeparation sandbox
+    Subsystem sftp internal-sftp
+
+    PermitRootLogin no
+    AllowUsers core
+    PasswordAuthentication no
+    ChallengeResponseAuthentication no

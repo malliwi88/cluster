@@ -1,0 +1,23 @@
+[Unit]
+Description=Haveged daemon for improved entropy
+Documentation=http://www.issihosts.com/haveged/
+Requires=flanneld.service
+After=flanneld.service
+
+[Service]
+Restart=always
+RestartSec=10
+TimeoutStartSec=0
+KillMode=none
+
+ExecStartPre=-/usr/bin/docker kill haveged
+ExecStartPre=-/usr/bin/docker rm haveged
+ExecStartPre=-/usr/bin/docker pull mxabierto/haveged
+ExecStart=/usr/bin/docker run --privileged --name=haveged mxabierto/haveged
+ExecStop=/usr/bin/docker stop haveged
+
+[Install]
+WantedBy=multi-user.target
+
+[X-Fleet]
+Global=true

@@ -1,0 +1,32 @@
+[Unit]
+Description=Kubernetes Kubelet
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+Requires=etcd.service
+Requires=docker.service
+After=etcd.service
+After=docker.service
+
+[Service]
+EnvironmentFile=/etc/environment
+TimeoutStartSec=0
+Restart=always
+RestartSec=5
+
+# Download and install binary file
+ExecStartPre=-/usr/bin/mkdir -p /opt/bin
+ExecStartPre=/usr/bin/wget -N -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/v0.19.1/bin/linux/amd64/kubelet
+ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
+ExecStart=/opt/bin/kubelet \
+  --address=${COREOS_PRIVATE_IPV4} \
+  --port=10250 \
+  --hostname_override=${COREOS_PRIVATE_IPV4} \
+  --api_servers=%i:8080 \
+  --healthz_bind_address=${COREOS_PRIVATE_IPV4} \
+  --healthz_port=10248 \
+  --logtostderr=true
+
+[Install]
+WantedBy=multi-user.target
+
+[X-Fleet]
+Global=true
