@@ -4,14 +4,36 @@
 coreos:
   update:
     reboot-strategy: best-effort
-  etcd:
-    addr: $public_ipv4:4001
-    peer-addr: $public_ipv4:7001
-    discovery: https://discovery.etcd.io/fef6289152fbfc62bf45ed8fd84bd56f
+  locksmith:
+    etcd_cafile: ''
+    etcd_keyfile: ''
+    etcd_certfile: ''
+    reboot_window_start: Sun 23:00
+    reboot_window_length: 1h30m
+  etcd2:
+    discovery-fallback: proxy
+    discovery: https://discovery.etcd.io/
+    initial-advertise-peer-urls: http://$private_ipv4:2380,http://$private_ipv4:7001
+    advertise-peer-urls: http://$public_ipv4:2380,http://$public_ipv4:7001
+    advertise-client-urls: http://$private_ipv4:2379,http://$private_ipv4:4001
+    listen-client-urls: http://$private_ipv4:2379,http://$private_ipv4:4001,http://127.0.0.1:4001
+    listen-peer-urls: http://$private_ipv4:2380,http://$private_ipv4:7001
+    proxy: 'off'
+    cert-file: none
+    key-file: none
+    client-cert-auth: none
+    trusted-ca-file: none
   fleet:
     public-ip: $public_ipv4
+    etcd_servers: http://$public_ipv4:2379,http://$public_ipv4:4001
+    etcd_cafile: ''
+    etcd_keyfile: ''
+    etcd_certfile: ''
   flannel:
-    interface: $public_ipv4
+    etcd_endpoints: http://$public_ipv4:2379,http://$public_ipv4:4001
+    etcd_cafile: ''
+    etcd_keyfile: ''
+    etcd_certfile: ''
   units:
   - name: flanneld.service
     command: start
@@ -20,7 +42,7 @@ coreos:
       content: |
         [Service]
         ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
-  - name: etcd.service
+  - name: etcd2.service
     command: start
   - name: fleet.service
     command: start

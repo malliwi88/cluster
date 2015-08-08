@@ -1,14 +1,14 @@
 # Endpoint to generate a discovery token
-$new_discovery_url='https://discovery.etcd.io/new'
+$new_discovery_url='https://discovery.etcd.io/new?size=1'
 
 # Automatically replace the discovery token
 if File.exists?('user-data') && ARGV[0].eql?('up')
   require 'open-uri'
   require 'yaml'
-  
+
   token = open($new_discovery_url).read
   data = YAML.load(IO.readlines('user-data')[1..-1].join)
-  data['coreos']['etcd']['discovery'] = token
+  data['coreos']['etcd2']['discovery'] = token
   yaml = YAML.dump(data)
   File.open('user-data', 'w') { |file| file.write("#cloud-config\n\n#{yaml}") }
 end
