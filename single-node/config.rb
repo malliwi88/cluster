@@ -20,7 +20,7 @@ $num_instances = (ENV['CLUSTER_SIZE'] || 1).to_i
 $instance_name_prefix = "core"
 
 # CoreOS channel
-$update_channel = 'stable'
+$update_channel = 'alpha'
 
 # Enable port forwarding of Docker TCP socket
 $expose_docker_tcp = 2375
@@ -30,5 +30,5 @@ $forwarded_ports = {}
 
 # VM settings
 $vm_gui = false
-$vm_memory = 512
+$vm_memory = 1024
 $vm_cpus = 1
