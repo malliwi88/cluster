@@ -1,0 +1,18 @@
+[Unit]
+Description=fleet daemon
+After=etcd2.service
+Wants=fleet.socket
+After=fleet.socket
+
+[Service]
+Environment=GOMAXPROCS=1
+ExecStart=/usr/local/bin/fleetd
+Restart=always
+RestartSec=10s
+Environment="FLEET_ETCD_SERVERS=http://192.168.111.101:2379,http://192.168.111.101:4001"
+Environment="FLEET_METADATA=role=counsel,name=master"
+# Master node may provide public IP entry point
+# Environment="FLEET_PUBLIC_IP=0.0.0.0"
+
+[Install]
+WantedBy=multi-user.target

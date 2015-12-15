@@ -1,0 +1,17 @@
+[Unit]
+Description=etcd2
+
+[Service]
+Type=notify
+ExecStart=/usr/local/bin/etcd
+Restart=always
+RestartSec=10s
+LimitNOFILE=40000
+Environment="ETCD_DATA_DIR=/var/lib/etcd2"
+Environment="ETCD_NAME=worker-01"
+Environment="ETCD_INITIAL_CLUSTER=master=http://192.168.111.101:2380"
+Environment="ETCD_PROXY=on"
+Environment="ETCD_LISTEN_CLIENT_URLS=http://192.168.111.102:2379,http://192.168.111.102:4001"
+
+[Install]
+WantedBy=multi-user.target

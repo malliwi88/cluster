@@ -1,0 +1,6 @@
+[Unit]
+Description=Fleet API Socket
+PartOf=fleet.service
+
+[Socket]
+ListenStream=/var/run/fleet.sock

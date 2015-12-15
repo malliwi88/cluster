@@ -1,0 +1,14 @@
+[Unit]
+Description=Docker socket for API access (TCP or UNIX)
+Documentation=https://docs.docker.com
+PartOf=docker.service
+
+[Socket]
+# Worker nodes use UNIX socket
+ListenStream=/var/run/docker.sock
+SocketMode=0660
+SocketUser=root
+SocketGroup=docker
+
+[Install]
+WantedBy=sockets.target

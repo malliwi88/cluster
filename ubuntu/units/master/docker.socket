@@ -1,0 +1,12 @@
+[Unit]
+Description=Docker socket for API access (TCP or UNIX)
+Documentation=https://docs.docker.com
+PartOf=docker.service
+
+[Socket]
+# Master node use TCP socket
+ListenStream=2375
+BindIPv6Only=both
+
+[Install]
+WantedBy=sockets.target

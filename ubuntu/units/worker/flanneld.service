@@ -1,0 +1,25 @@
+[Unit]
+Description=Network fabric for containers
+Documentation=https://github.com/coreos/flannel
+Requires=etcd2.service
+After=etcd2.service
+
+[Service]
+Type=notify
+Restart=always
+RestartSec=5
+LimitNOFILE=40000
+LimitNPROC=1048576
+Environment="TMPDIR=/var/tmp/"
+Environment="FLANNEL_VER=0.5.3"
+Environment="ETCD_SSL_DIR=/etc/ssl/etcd"
+Environment="FLANNEL_ENV_FILE=/run/flannel/options.env"
+ExecStartPre=/sbin/modprobe ip_tables
+ExecStartPre=/bin/mkdir -p /run/flannel
+ExecStartPre=/bin/mkdir -p ${ETCD_SSL_DIR}
+ExecStartPre=-/usr/bin/touch ${FLANNEL_ENV_FILE}
+ExecStartPre=/usr/local/bin/etcdctl -C http://192.168.111.101:4001 \
+  set /coreos.com/network/config '{ "Network": "10.10.0.0/16", "Backend": { "Type": "vxlan" } }'
+ExecStart=/usr/local/bin/flanneld \
+--ip-masq=true \
+--etcd-endpoints=http://192.168.111.101:2379,http://192.168.111.101:4001
